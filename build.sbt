@@ -28,8 +28,9 @@ scalacOptions ++= Seq(
   , "-Xlint"
   , "-Xverify"
   , "-feature"
-  ,"-Ypartial-unification"
+  , "-Ypartial-unification"
   , "-language:_"
+  , "-Xlint:-unused"
 )
 
 javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation", "-source", "1.7", "-target", "1.7")

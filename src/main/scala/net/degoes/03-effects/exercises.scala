@@ -698,7 +698,7 @@ object zio_concurrency {
   val supervisedExample: IO[Nothing, Unit] =
   IO.supervise {
     for {
-      fiber <- fibonacci(10000).fork
+      fiber <- fibonacci(10/*000*/).fork
     } yield ()
   }
 
@@ -710,7 +710,7 @@ object zio_concurrency {
   //
   val interrupted1: IO[Nothing, Unit] =
     for {
-      fiber <- fibonacci(10000).fork
+      fiber <- fibonacci(10/*000*/).fork
       _ <- IO.sleep(5.seconds)
       _ <- fiber.interrupt
     } yield ()
@@ -729,6 +729,11 @@ object zio_concurrency {
     both   =  fiber1.zipWith(fiber2)(_ + _)
     _      <- both.interrupt
   } yield ()
+
+  //
+  // EXERCISE 9
+  //
+  IO.unit.timeout(IO.fail("Fail"): IO[String, String])(_ => IO.now("Success"))(60.seconds)
 
   def fibonacci(n: Int): IO[Nothing, Int] =
     if (n <= 1) IO.now(n)
