@@ -943,17 +943,17 @@ object zio_schedule {
   val fiveTimesOrEverySecond = (fiveTimes || everySecond).loop
 
   // Produce a jittered schedule that first does exponential spacing, but then
-  // after the spacing reaces 60 s switches over to fixed spacing of 1 minute
+  // after the spacing races 60 s switches over to fixed spacing of 1 minute
   // between recurrences but will only do that for up to 100 times,
-  // and prodice a list of the results
+  // and produce a list of the results
 
-  val expo = Schedule.exponential(10.milliseconds)
+  val expo = Schedule.exponential(10.milliseconds).whileValue(_ < 1.minute)
   val fixedMin = Schedule.fixed(1.minute)
   val everyMin = Schedule.spaced(1.minute)
   val upto100 = Schedule.recurs(100)
 
   def mySchedule[A]: Schedule[A, List[A]] =
-    (((expo || fixedMin) andThen (everyMin && upto100)) *> Schedule.identity[A]).collect.jittered
+    ((expo andThen (everyMin && upto100)) *> Schedule.identity[A]).collect.jittered
 
 }
 
