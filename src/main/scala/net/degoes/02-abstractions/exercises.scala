@@ -2,8 +2,8 @@
 
 package net.degoes.abstractions
 
+import scalaz.Scalaz._
 import scalaz._
-import Scalaz._
 
 import scala.annotation.tailrec
 import scala.language.higherKinds
@@ -516,6 +516,13 @@ object optics {
           case _ => None
         },
         _ => USA)
+
+    def change(c: Country): Prism[Country, Unit] =
+      Prism[Country, Unit]({
+          case `c` => Some(())
+          case _ => None
+        },
+        _ => c)
   }
 
   case class Organisation(site: Site, name: String, address: Address)
@@ -618,4 +625,29 @@ object optics {
       Right(_))
 
   val org_prism = ???
+
+//  case class Component1[S](lens: Lens[S, Component1.State]) {
+//    def run[S](state: S): (S, Boolean) = ???
+//  }
+//  object Component1 {
+//    case class Config(server: String, port: Int)
+//    case class State(config: Config)
+//  }
+//  case class Component2[S](lens: Lens[S, Component2.State]) {
+//    def run[S](state: S): (S, Int) = ???
+//  }
+//  object Component2 {
+//    case class Config(loggingDirectory: String)
+//    case class State(config: Config)
+//  }
+//  case class MyAppState(
+//                         c1: Component1.State,
+//                         c2: Component2.State
+//                       )
+//  object MyAppState {
+//    val c1: Lens[MyAppState, Component1.State] = ???
+//    val c2: Lens[MyAppState, Component2.State] = ???
+//  }
+//  val c1 : Component1[MyAppState] = Component1(MyAppState.c1)
+//  val c2 : Component2[MyAppState] = Component2(MyAppState.c2)
 }
