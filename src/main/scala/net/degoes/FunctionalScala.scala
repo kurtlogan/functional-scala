@@ -36,14 +36,14 @@ object FunctionalScala extends App {
     HttpClient[F].getURL(url)
 
   def extractURLs(root: URL, html: String): List[URL] = {
-    val pattern = "href=[\"\']([^\"\']+)[\"\']".r
+    val pattern = """href=["']([^"']+)["']""".r
 
     scala.util.Try({
       val matches = (for (m <- pattern.findAllMatchIn(html)) yield m.group(1)).toList
 
       for {
         m   <- matches
-        url <- URL(m).toList ++ root.relative(m).toList
+        url <- URL(m) orElse root.relative(m)
       } yield url
     }).getOrElse(Nil)
   }
@@ -72,6 +72,7 @@ object FunctionalScala extends App {
 
     def redeem[E1, E2, A, B](fa: F[E1, A])(err: E1 => F[E2, B], succ: A => F[E2, B]): F[E2, B]
   }
+
   object Effect {
     def apply[F[+_, +_]](implicit F: Effect[F]): Effect[F] = F
 
@@ -146,6 +147,7 @@ object FunctionalScala extends App {
           html  <- getURL[F](url)
           crawl <- process1(url, html)
           links = extractURLs(url, html).toSet.flatMap(router) diff visited
+          a = println(links)
         } yield (crawl, links)
       }).map(_.foldMap(identity)).flatMap {
         case (crawl1, links) => loop(links, visited ++ seeds, crawl0 |+| crawl1)
@@ -207,28 +209,28 @@ object FunctionalScala extends App {
     }
   }
 
-//  trait Bind[F[_]] {
-//    def bind[G[_], A, B](fa: F[A])(f: A => G[B]): G[B]
-//  }
-//
-//  object Bind {
-//    def listBind[G[_]: Monad](implicit ev: Monoid[G[?]]: Bind[Option] = {
-//      new Bind[Option] {
-//        override def bind[G[_], A, B](fa: Option[A])(f: A => G[B]): G[B] = fa match {
-//          case None => mzero[G[B]]
-//          case Some(v) => f(v)
-//        }
-//      }
-//    }
-//  }
-//
-//  case class OptionT[F[_], A](run: F[Option[A]]) {
-//    def map[B](f: A => B)(implicit F: Functor[F]): F[Option[B]] = run.map(_.map(f))
-//    def flatMap[B](f: A => F[Option[B]])(implicit F: Monad[F]): F[Option[B]] = run.flatMap {
-//      case Some(a) => f(a)
-//      case None => F.point(None)
-//    }
-//  }
+  trait BestMonad[F[_], G[_]] {
+    def bind[A, B](fa: F[A])(f: A => G[B])(implicit ev: MonadPlus[G]): G[B]
+  }
+
+  object BestMonad {
+    def listBind[G[_]]: BestMonad[Option, G] = {
+      new BestMonad[Option, G] {
+        override def bind[A, B](fa: Option[A])(f: A => G[B])(implicit ev: MonadPlus[G]): G[B] = fa match {
+          case None => MonadPlus[G].empty[B]
+          case Some(v) => f(v)
+        }
+      }
+    }
+  }
+
+  case class OptionT[F[_], A](run: F[Option[A]]) {
+    def map[B](f: A => B)(implicit F: Functor[F]): F[Option[B]] = run.map(_.map(f))
+    def flatMap[B](f: A => F[Option[B]])(implicit F: Monad[F]): F[Option[B]] = run.flatMap {
+      case Some(a) => f(a)
+      case None => F.point(None)
+    }
+  }
 
   val testData1: CrawlState =
     CrawlState(Map(
@@ -295,3 +297,5 @@ object FunctionalScala extends App {
 //      def attempt[A](fa: F[A]): F[Either[E, A]]
 //    }
 }
+
+
