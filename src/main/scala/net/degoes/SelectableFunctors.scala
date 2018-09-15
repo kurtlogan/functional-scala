@@ -14,9 +14,9 @@ object SelectableFunctors {
   // A => IO[E, B]
   // A => B
 
-  val println: KleisliIO[IOException, String, Unit] = { KleisliIO.impure(???); ??? }
-  val readln: KleisliIO[IOException, Unit, String] = { KleisliIO.impure(???); ??? }
-  readln >>> println // Super fast due to not boxing
+//  val println: KleisliIO[IOException, String, Unit] = { KleisliIO.impure(???); ??? }
+//  val readln: KleisliIO[IOException, Unit, String] = { KleisliIO.impure(???); ??? }
+//  readln >>> println // Super fast due to not boxing
 
   sealed trait Parser[+E, +A] { self =>
     def map[B](f: A => B): Parser[E, B] = Map(self, f)
